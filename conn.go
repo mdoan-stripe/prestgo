@@ -200,12 +200,15 @@ func (r *rows) fetch() error {
 			for i, col := range qresp.Columns {
 				r.columns[i] = col.Name
 				switch {
+				case strings.HasPrefix(col.Type, "row"):
+					// If the column is an unflattened struct, interpret as a string.
+					r.types[i] = rowConverter{Type: col.Type}
 				case strings.HasPrefix(col.Type, VarChar):
 					r.types[i] = driver.String
 				case col.Type == BigInt, col.Type == Integer:
 					r.types[i] = bigIntConverter
 				case col.Type == Boolean:
-					r.types[i] = driver.Bool
+					r.types[i] = boolConverter
 				case col.Type == Double:
 					r.types[i] = doubleConverter
 				case col.Type == Timestamp:
@@ -338,6 +341,29 @@ type valueConverterFunc func(v interface{}) (driver.Value, error)
 func (fn valueConverterFunc) ConvertValue(v interface{}) (driver.Value, error) {
 	return fn(v)
 }
+
+/** Stripe's (Data Platform) custom row converter
+ * Hack: We introduce a custom class that converts unflattened structs in Presto into a JSON string.
+ */
+type rowConverter struct {
+	Type string
+}
+
+func (rc rowConverter) ConvertValue(v interface{}) (driver.Value, error) {
+	if v == nil {
+		return nil, nil
+	}
+	// TODO: Write a custom parser to combine "rc.Type" and "v" into something like:
+	// {_id="dp_9uVcPMp305RgYo",created=1484119972.0129445,open=false,...}
+	return v, nil
+}
+
+var boolConverter = valueConverterFunc(func(val interface{}) (driver.Value, error) {
+	if val == nil {
+		return nil, nil
+	}
+	return driver.Bool.ConvertValue(val)
+})
 
 // bigIntConverter converts a value from the underlying json response into an int64.
 // The Go JSON decoder uses float64 for generic numeric values
