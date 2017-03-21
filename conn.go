@@ -204,7 +204,7 @@ func (r *rows) fetch() error {
 					// If the column is an unflattened struct, interpret as a string.
 					r.types[i] = rowConverter{Type: col.Type}
 				case strings.HasPrefix(col.Type, VarChar):
-					r.types[i] = driver.String
+					r.types[i] = stringConverter
 				case col.Type == BigInt, col.Type == Integer:
 					r.types[i] = bigIntConverter
 				case col.Type == Boolean:
@@ -357,6 +357,13 @@ func (rc rowConverter) ConvertValue(v interface{}) (driver.Value, error) {
 	// {_id="dp_9uVcPMp305RgYo",created=1484119972.0129445,open=false,...}
 	return v, nil
 }
+
+var stringConverter = valueConverterFunc(func(val interface{}) (driver.Value, error) {
+	if val == nil {
+		return nil, nil
+	}
+	return driver.String.ConvertValue(val)
+})
 
 var boolConverter = valueConverterFunc(func(val interface{}) (driver.Value, error) {
 	if val == nil {
