@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"github.com/limetext/backend/log"
 )
 
 // Name of the driver to use when calling `sql.Open`
@@ -234,7 +233,7 @@ func (r *rows) fetch() error {
 					r.types[i] = timestampWithTimezoneConverter
 				default:
 					r.types[i] = stringConverter
-					log.Warn(fmt.Sprintf("unsupported column type: %s", col.Type))
+					fmt.Println(fmt.Sprintf("unsupported column type: %s", col.Type))
 				}
 			}
 			r.fetched = true
