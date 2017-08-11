@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/limetext/backend/log"
 )
 
 // Name of the driver to use when calling `sql.Open`
@@ -25,6 +26,8 @@ const (
 	DefaultUsername = "prestgo"
 
 	TimestampFormat = "2006-01-02 15:04:05.000"
+	TimeFormat = "15:04:05"
+	DateFormat = "2006-01-02"
 )
 
 var (
@@ -200,24 +203,38 @@ func (r *rows) fetch() error {
 			for i, col := range qresp.Columns {
 				r.columns[i] = col.Name
 				switch {
-				case strings.HasPrefix(col.Type, "row"):
+				case strings.HasPrefix(col.Type, Row):
 					// If the column is an unflattened struct, interpret as a string.
 					r.types[i] = rowConverter{Type: col.Type}
-				case strings.HasPrefix(col.Type, VarChar):
+				case strings.HasPrefix(col.Type, VarChar), strings.HasPrefix(col.Type, Char):
 					r.types[i] = stringConverter
-				case col.Type == BigInt, col.Type == Integer:
+				case col.Type == JSON:
+					// use string for json
+					r.types[i] = stringConverter
+				case col.Type == BigInt, col.Type == Integer, col.Type == Smallint, col.Type == Tinyint:
 					r.types[i] = bigIntConverter
 				case col.Type == Boolean:
 					r.types[i] = boolConverter
-				case col.Type == Double:
+				case col.Type == Double, col.Type == Real:
 					r.types[i] = doubleConverter
+				case strings.HasPrefix(col.Type, Decimal):
+					// use string converter for this so that we keep our preciseness
+					r.types[i] = stringConverter
+				case col.Type == Date:
+					r.types[i] = dateConverter
+				case col.Type == Time:
+					// use string here, having no date makes timestamps weird
+					r.types[i] = stringConverter
+				case col.Type == TimeWithTimezone:
+					// use string here, having no date makes timestamps weird
+					r.types[i] = stringConverter
 				case col.Type == Timestamp:
 					r.types[i] = timestampConverter
 				case col.Type == TimestampWithTimezone:
 					r.types[i] = timestampWithTimezoneConverter
-
 				default:
-					return fmt.Errorf("unsupported column type: %s", col.Type)
+					r.types[i] = stringConverter
+					log.Warn(fmt.Sprintf("unsupported column type: %s", col.Type))
 				}
 			}
 			r.fetched = true
@@ -399,12 +416,28 @@ var doubleConverter = valueConverterFunc(func(val interface{}) (driver.Value, er
 		switch vv {
 		case "Infinity":
 			return math.Inf(1), nil
+		case "-Infinity":
+			return math.Inf(-1), nil
 		case "NaN":
 			return math.NaN(), nil
 		}
 
 	}
 	return nil, fmt.Errorf("%s: failed to convert %v (%T) into type float64", DriverName, val, val)
+})
+
+// dateConverter converts a value from the underlying json response into a time.Time.
+var dateConverter = valueConverterFunc(func(val interface{}) (driver.Value, error) {
+	if val == nil {
+		return nil, nil
+	}
+	if vv, ok := val.(string); ok {
+		// BUG: should parse using session time zone.
+		if ts, err := time.ParseInLocation(DateFormat, vv, time.UTC); err == nil {
+			return ts, nil
+		}
+	}
+	return nil, fmt.Errorf("%s: failed to convert %v (%T) into type time.Time", DriverName, val, val)
 })
 
 // timestampConverter converts a value from the underlying json response into a time.Time.
@@ -414,7 +447,7 @@ var timestampConverter = valueConverterFunc(func(val interface{}) (driver.Value,
 	}
 	if vv, ok := val.(string); ok {
 		// BUG: should parse using session time zone.
-		if ts, err := time.ParseInLocation(TimestampFormat, vv, time.Local); err == nil {
+		if ts, err := time.ParseInLocation(TimestampFormat, vv, time.UTC); err == nil {
 			return ts, nil
 		}
 	}

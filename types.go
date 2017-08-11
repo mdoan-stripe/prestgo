@@ -7,14 +7,29 @@ const (
 	// A 64-bit signed two’s complement integer with a minimum value of -2^63 and a maximum value of 2^63 - 1.
 	BigInt = "bigint"
 
-	// Integer assumed to be an alias for BigInt.
+	// A 32-bit signed two’s complement integer with a minimum value of -2^31 and a maximum value of 2^31 - 1. The name INT is also available for this type.
 	Integer = "integer"
+
+	// A 16-bit signed two’s complement integer with a minimum value of -2^15 and a maximum value of 2^15 - 1.
+	Smallint = "smallint"
+
+	// A 8-bit signed two’s complement integer with a minimum value of -2^7 and a maximum value of 2^7 - 1.
+	Tinyint = "tinyint"
+
+	// A 32 bit float basically
+	Real = "real"
 
 	// A double is a 64-bit inexact, variable-precision implementing the IEEE Standard 754 for Binary Floating-Point Arithmetic.
 	Double = "double"
 
+	// A fixed point decimal number
+	Decimal = "decimal"
+
 	// Variable length character data.
 	VarChar = "varchar"
+
+	// Fixed length character data.
+	Char = "char"
 
 	// Variable length binary data.
 	VarBinary = "varbinary"
@@ -30,6 +45,10 @@ const (
 	// Example: TIME '01:02:03.456'
 	Time = "time"
 
+	//Instant in time that includes the date and time of day without a time zone. Values of this type are parsed and rendered in the session time zone.
+	TimeWithTimezone = "time with time zone"
+
+
 	// Instant in time that includes the date and time of day without a time zone. Values of this type are parsed and rendered in the session time zone.
 	// Example: TIMESTAMP '2001-08-22 03:04:05.321'
 	Timestamp = "timestamp"
@@ -37,6 +56,9 @@ const (
 	// Instant in time that includes the date and time of day with a time zone. Values of this type are parsed and rendered in the provided time zone.
 	// Example: TIMESTAMP '2001-08-22 03:04:05.321' AT TIME ZONE 'America/Los_Angeles'
 	TimestampWithTimezone = "timestamp with time zone"
+
+	// Prefix for row data type - used for unflattened structs
+	Row = "row"
 )
 
 type stmtResponse struct {
