@@ -48,7 +48,6 @@ const (
 	//Instant in time that includes the date and time of day without a time zone. Values of this type are parsed and rendered in the session time zone.
 	TimeWithTimezone = "time with time zone"
 
-
 	// Instant in time that includes the date and time of day without a time zone. Values of this type are parsed and rendered in the session time zone.
 	// Example: TIMESTAMP '2001-08-22 03:04:05.321'
 	Timestamp = "timestamp"
