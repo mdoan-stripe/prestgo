@@ -303,7 +303,7 @@ func TestRowsFetchSupportedTypes(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expected := []interface{}{"c0r0", int64(12345), float64(12.45), true, time.Date(2015, 2, 9, 18, 26, 02, 13000000, time.Local), int64(12)}
+	expected := []interface{}{"c0r0", int64(12345), float64(12.45), true, time.Date(2015, 2, 9, 18, 26, 02, 13000000, time.UTC), int64(12)}
 
 	if len(values) != len(expected) {
 		t.Fatalf("got %d values, wanted %d", len(values), len(expected))
@@ -532,7 +532,7 @@ func TestTimestampConverter(t *testing.T) {
 
 		{
 			val:      "2015-04-23 10:00:08.123",
-			expected: time.Date(2015, 04, 23, 10, 0, 8, int(123*time.Millisecond), time.Local),
+			expected: time.Date(2015, 04, 23, 10, 0, 8, int(123*time.Millisecond), time.UTC),
 			err:      false,
 		},
 
@@ -607,7 +607,7 @@ func TestTimestampWithTimezoneConverter(t *testing.T) {
 
 		{
 			val:      "2015-04-23 10:00:08.123",
-			expected: time.Date(2015, 04, 23, 10, 0, 8, int(123*time.Millisecond), time.Local),
+			expected: time.Date(2015, 04, 23, 10, 0, 8, int(123*time.Millisecond), time.UTC),
 			err:      false,
 		},
 
