@@ -297,6 +297,8 @@ func (r *rows) waitForData() (*queryResponse, bool, error) {
 func (r *rows) Columns() []string {
 	if !r.fetched {
 		if err := r.fetch(); err != nil {
+			return r.columns
+		} else {
 			return []string{}
 		}
 	}
